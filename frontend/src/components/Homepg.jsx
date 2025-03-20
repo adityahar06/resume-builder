@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BoyImage from '../../public/Women.jpg';
+
 // import Resume from "../../public/Resume.jpeg";
+
 
 const Homepg = () => {
   const [user, setUser] = useState('login');

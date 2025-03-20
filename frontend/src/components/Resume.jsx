@@ -131,43 +131,50 @@
 // export default Resume;
 
 
-
-import React from "react";
+import React ,{useEffect,useRef}from "react";
 import { useLocation } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-const Resume = () => {
+const Resume = ({ scrollToEducation },{scrolltoProject}) => {
   const location = useLocation();
   const data = location.state;
-  console.log("resume page data is ", data);
+  console.log("Resume page data is ", data);
+  
 
   const downloadPDF = () => {
     const input = document.getElementById("resume-content");
-    html2canvas(input).then((canvas) => {
+    html2canvas(input, { scale: 2 }).then((canvas) => {
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      // Add the image of the resume content
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
-      // Now handle the clickable links for projects
-      let yOffset = 250; // Initial Y position for projects
+      let yOffset = pdfHeight + 10; // Start below the resume content
+
+      pdf.setFontSize(14);
+      pdf.text("Projects", 10, yOffset);
+      yOffset += 6;
 
       data.user.project.forEach((project) => {
-        // Adding clickable project link directly on the project title
-        pdf.textWithLink(
-          project.title, // The text for the link
-          10, // X-coordinate position of the text
-          yOffset, // Y-coordinate position of the text
-          { url: project.link } // The URL of the link
-        );
-        
-        // Increase the Y-offset for the next project
-        yOffset += 10;  // Adjust the spacing between projects as needed
+        if (project.link) {
+          pdf.setTextColor(0, 0, 255); // Blue color for link
+          pdf.textWithLink(project.title, 10, yOffset, { url: project.link });
+          pdf.setTextColor(0, 0, 0); // Reset color to black
+        } else {
+          pdf.text(project.title, 10, yOffset);
+        }
+        yOffset += 8;
       });
+
+      // Add LinkedIn link at the bottom
+      if (data.user.linkedin) {
+        pdf.setTextColor(0, 0, 255);
+        pdf.textWithLink("LinkedIn Profile", 10, yOffset, { url: data.user.linkedin });
+        pdf.setTextColor(0, 0, 100);
+      }
 
       pdf.save("resume.pdf");
     });
@@ -175,7 +182,7 @@ const Resume = () => {
 
   return (
     <div>
-      {/* The content that will be captured */}
+      {/* Resume content to be captured */}
       <div
         className="w-[210mm] h-[297mm] max-w-[1000px] overflow-auto p-6 border rounded shadow-md"
         id="resume-content"
@@ -186,7 +193,17 @@ const Resume = () => {
             <h1 className="text-2xl font-bold">{data.user.name}</h1>
             <h2 className="text-xl">{data.user.proffession}</h2>
             <p className="text-sm">Email: {data.user.email} | Phone: {data.user.phone}</p>
-            <p className="text-sm">LinkedIn: {data.user.linkedin}</p>
+            <p className="text-sm">
+              LinkedIn:{" "}
+              <a
+                href={data.user.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline"
+              >
+                {data.user.linkedin}
+              </a>
+            </p>
           </div>
           <hr className="mb-5" />
 
@@ -227,66 +244,55 @@ const Resume = () => {
           <hr className="mb-5" />
 
           {/* Education */}
-          <div  className="mb-5">
-          <h3 className="text-lg font-semibold  border-b-2  pb-2">
-            Education
-          </h3>
-
-          {data.user.education.length > 0 ? (
-            <div className="mt-4">
-              {data.user.education.map((entry, index) => (
-                <div key={index} className="mb-5">
-                  <div className="flex justify-between items-center">
-                    <h4 className="text-lg font-semibold ">
-                      {entry.degree || "Degree Not Specified"}
-                    </h4>
-                    <span className="text-sm ">
-                      {entry.startYear || "Start Year"} - {entry.endYear || "End Year"}
-                    </span>
+          <div className="mb-5">
+            <h3 className="text-lg font-semibold border-b-2 pb-2">Education</h3>
+            {data.user.education.length > 0 ? (
+              <div className="mt-4">
+                {data.user.education.map((entry, index) => (
+                  <div key={index} className="mb-5">
+                    <div className="flex justify-between items-center">
+                      <h4 className="text-lg font-semibold">{entry.degree || "Degree Not Specified"}</h4>
+                      <span className="text-sm">
+                        {entry.startYear || "Start Year"} - {entry.endYear || "End Year"}
+                      </span>
+                    </div>
+                    <p className="text-sm">{entry.institution || "Institution Not Provided"}</p>
+                    <p className="text-sm">
+                      <span className="font-medium">Field of Study:</span> {entry.fieldofstudy || "N/A"}
+                    </p>
+                    <ul className="list-disc pl-5 mt-2">
+                      <li className="text-sm">
+                        <span className="font-medium">10th Percentage:</span> {entry.tenthpercentage || "N/A"}
+                      </li>
+                      <li className="text-sm">
+                        <span className="font-medium">12th Percentage:</span> {entry.twelvethpercentage || "N/A"}
+                      </li>
+                      <li className="text-sm">
+                        <span className="font-medium">Overall CGPA:</span> {entry.overallCGPA || "N/A"}
+                      </li>
+                    </ul>
                   </div>
-                  <p className="text-sm ">{entry.institution || "Institution Not Provided"}</p>
-
-                  <p className="text-sm ">
-                    <span className=" font-medium">Field of Study:</span> {entry.fieldofstudy || "N/A"}
-                  </p>
-
-                  <ul className="list-disc pl-5 mt-2">
-                    <li className="text-sm ">
-                      <span className=" font-medium">10th Percentage:</span> {entry.tenthpercentage || "N/A"}
-                    </li>
-                    <li className="text-sm ">
-                      <span className=" font-medium">12th Percentage:</span> {entry.twelvethpercentage || "N/A"}
-                    </li>
-                    <li className="text-sm ">
-                      <span className="font-medium">Overall CGPA:</span> {entry.overallCGPA || "N/A"}
-                    </li>
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm  mt-3">No education data available.</p>
-          )}
-
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm mt-3">No education data available.</p>
+            )}
+          </div>
           <hr className="mb-5" />
-        </div>
-          
-          <hr className="mb-5" />
-          
+
           {/* Certifications */}
           <div className="mb-5">
             <h3 className="text-lg font-semibold">Certifications</h3>
           </div>
-
           <hr className="mb-5" />
-          
+
           {/* Projects */}
-          <div className="mb-5">
+          <div ref={ProjectRef}className="mb-5">
             <h3 className="text-lg font-semibold">Projects</h3>
             {data.user.project.map((project) => (
               <div className="mb-5" key={project.title}>
                 <h4 className="text-lg font-semibold">
-                  <a href={project.link} target="_blank" rel="noopener noreferrer">
+                  <a href={project.link} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
                     {project.title}
                   </a>
                 </h4>
@@ -294,9 +300,8 @@ const Resume = () => {
               </div>
             ))}
           </div>
-          
           <hr className="mb-5" />
-          
+
           {/* Languages */}
           <div className="mb-5">
             <h3 className="text-lg font-semibold">Languages</h3>
@@ -309,7 +314,7 @@ const Resume = () => {
         </div>
       </div>
 
-      {/* The button that will not appear in the PDF */}
+      {/* Download PDF Button */}
       <div className="mt-5 text-center">
         <button
           onClick={downloadPDF}

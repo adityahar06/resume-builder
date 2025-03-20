@@ -10,8 +10,11 @@ const Educationpg = () => {
   const [educationEntries, setEducationEntries] = useState([
     { institution: "", fieldofstudy: "", degree: "", overallCGPA: "", tenthpercentage: "", twelvethpercentage: "", startYear: "", endYear: "" },
   ]);
+  const handleDelete = (index) => {
+    setEducationEntries(educationEntries.filter((_, i) => i !== index));
+  };
 
-  const educationRef = useRef(null);
+ 
 
   const handleChange = (index, event) => {
     const newEntries = [...educationEntries];
@@ -20,6 +23,7 @@ const Educationpg = () => {
   };
 
   const handleAddEntry = () => {
+  
 
     
     setEducationEntries([
@@ -172,15 +176,24 @@ const Educationpg = () => {
                 </div>
               </div>
             </form>
+            
 
             {/* (+ Add More Education) Button - Centered Inside the Form */}
-            <div className="flex justify-center mt-5">
+            <div className="flex justify-center gap-4 mt-5">
               <button
                 className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-800"
                 onClick={handleAddEntry}
               >
                 + Add More Education
               </button>
+              {educationEntries.length > 1 && (
+              <button 
+                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-800"
+                onClick={() => handleDelete(educationEntries.length - 1)}
+              >
+               Delete
+              </button>
+                )}
             </div>
           </div>
         ))}

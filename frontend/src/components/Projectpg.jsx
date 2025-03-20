@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import Resume from './Resume';
 
 const Projectpg = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const data = location.state;
   console.log("data in projects page", data);
-
+ 
   const [projects, setProjects] = useState(data.user.project || [
     {
       id: 1,

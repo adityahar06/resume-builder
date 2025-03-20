@@ -234,7 +234,9 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import { auth, provider } from '../firebase.config';
+import { signInWithPopup } from 'firebase/auth';
+import GoogleLogo from '../../public/GoogleLogo.webp';
 const Homepage = () => {
   const [user, setUser] = useState('login');
   const [loginEmail, setLoginEmail] = useState('');
@@ -250,9 +252,7 @@ const Homepage = () => {
     try {
       const response = await fetch('http://localhost:5000/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -260,9 +260,7 @@ const Homepage = () => {
       console.log('Login response:', data);
       if (data.success) {
         console.log("Login successful");
-        navigate('/Homepg', {
-          state: {user: data.user }, // Send the user data as props to homepage
-        });
+        navigate('/Homepg', { state: { user: data.user } });
       } else {
         alert(data.message);
       }
@@ -279,9 +277,7 @@ const Homepage = () => {
     try {
       const response = await fetch('http://localhost:5000/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -294,6 +290,32 @@ const Homepage = () => {
       }
     } catch (error) {
       console.log("Error during registration:", error);
+    }
+  };
+
+  const googleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      console.log("Google Sign-In Success:", result.user);
+      const googleEmail = result.user.email;
+      const googlePassword = result.user.uid; // Using UID as a placeholder password
+
+      // Send Google credentials to server
+      const response = await fetch("http://localhost:5000/google-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: googleEmail, password: googlePassword }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        console.log("Google Login/Register successful");
+        navigate("/Homepg", { state: { user: data.user } });
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      console.log("Google Sign-In Error:", error);
     }
   };
 
@@ -345,10 +367,12 @@ const Homepage = () => {
                       onChange={(e) => setLoginPassword(e.target.value)}
                       className="w-full p-3 text-lg sm:text-xl border border-[#ccc] rounded-lg"
                       required
+                      
                     />
                   </div>
                   <button type="submit" className="w-full py-3 bg-[#5e2a8c] text-white rounded-lg text-lg sm:text-xl hover:bg-[#4a1e71] transition-colors duration-300">Login</button>
                 </form>
+                
                 <p className="mt-4 text-lg sm:text-xl text-[#5e2a8c]">
                   New user? <button className="text-[#5e2a8c] font-bold hover:underline" onClick={registerbutton}>Register</button>
                 </p>
@@ -379,10 +403,22 @@ const Homepage = () => {
                       onChange={(e) => setRegisterPassword(e.target.value)}
                       className="w-full p-3 text-lg sm:text-xl border border-[#ccc] rounded-lg"
                       required
+                      autoComplete="new-password"
                     />
                   </div>
                   <button type="submit" className="w-full py-3 bg-[#5e2a8c] text-white rounded-lg text-lg sm:text-xl hover:bg-[#4a1e71] transition-colors duration-300">Register</button>
                 </form>
+                <button 
+                 onClick={googleSignIn} 
+                 className="w-full mt-4 py-3 bg-[#ea4335] text-white rounded-lg text-lg sm:text-xl hover:bg-[#c1351b] transition-colors duration-300 flex items-center justify-center gap-3"
+                >
+                <img 
+                src={GoogleLogo} 
+                alt="Google Logo" 
+                className="w-6 h-6"
+                />
+                <span>Sign up with Google</span>
+              </button>
               </>
             )}
           </div>
