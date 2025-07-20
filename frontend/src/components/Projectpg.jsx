@@ -40,6 +40,41 @@ const Projectpg = () => {
       setDescription(value);
     }
   };
+ // doing this from backend side means getting reonse form bakcned 
+ const [isLoading, setIsLoading] = useState(false); // already present or add this at top
+
+const handleopenai = async () => {
+  if (!description.trim()) {
+    alert("Please enter a description.");
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const response = await fetch("http://localhost:5000/ai-refined-data", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ description }),
+    });
+
+    const data = await response.json();
+    if (data.refined) {
+      setDescription(data.refined);
+    } else {
+      alert("AI could not refine the description.");
+    }
+  } catch (err) {
+    console.error("AI refinement error:", err);
+    alert("Something went wrong while refining the description.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+ 
 
   const addprojectsbtnhandler = async (e) => {
     e.preventDefault();
@@ -139,6 +174,18 @@ const Projectpg = () => {
               className="mt-1 w-full px-3 py-2 bg-gray-200 border border-purple-700 rounded focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-700 resize-none"
             ></textarea>
           </div>
+          {/* here will be the button when user clicked the descripion will be sent to gpt and then refined and given by it  */}
+          <button
+             type="button"
+             onClick={handleopenai}
+           disabled={isLoading}
+             className={`px-3 py-1 rounded text-white text-sm transition ${
+            isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-purple-600 hover:bg-purple-800"
+            }`}
+            >
+              {isLoading ? "Refining..." : "✨ Refine with AI"}
+            </button>
+
           <button
             type="submit"
             className="w-full py-2 px-4 bg-purple-600 text-white rounded hover:bg-purple-900 transition"
@@ -210,8 +257,8 @@ const Projectpg = () => {
   {/* Skills */}
   <div className="mb-5">
                 <h3 className="text-lg font-semibold text-gray-900">Skills</h3>
-                {data.user.skills.map((skill) => (
-                  <p key={skill} className="text-sm text-gray-700">{skill}</p>
+                {data.user.skills.map((skill, index) => (
+                  <p key={`${skill}-${index}`} className="text-sm text-gray-700">{skill}</p>
                 ))}
               </div>
               <hr className="mb-5" />
@@ -321,9 +368,9 @@ const Projectpg = () => {
   {/* Languages */}
   <div className="mb-5">
                 <h3 className="text-lg font-semibold text-gray-900">Languages</h3>
-                {data.user.languagesSelected.map((language) => (
-                  <p key={language} className="text-sm text-gray-700">{language}</p>
-                ))}
+                {data.user.languagesSelected.map((language, index) => (
+                   <p key={`${language}-${index}`} className="text-sm text-gray-700">{language}</p>
+               ))}
               </div>
 </div>
 </div>

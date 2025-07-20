@@ -38,21 +38,18 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.post('/register',async(req,res)=>{
-    const{email,password}=req.body;
-    console.log(req.body);
-    const user=await User.create({
-        email:email,
-        password:password
-    }
-    )
-     res.status(201).json({success:true});
+app.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+  const existingUser = await User.findOne({ email });
 
-    console.log("data created in database");
-      
-       
-    
-})
+  if (existingUser) {
+      return res.json({ success: false, message: "User already exists" });
+  }
+
+  const user = await User.create({ email, password });
+  return res.status(201).json({ success: true, user });
+});
+
 
 app.post('/login',async(req,res)=>{
  const{email,password}=req.body;
@@ -158,7 +155,50 @@ app.post('/personalpg-homepg', async (req, res) => {
       return res.status(201).json({ success: true, user: newuser3 });
    
   });
+   // getting the ai refiend data
+   // getting he description form the project-pg and getting in backend and sendont to openai
+const fetch = require('node-fetch');
 
+app.post("/ai-refined-data", async (req, res) => {
+  const userDescription = req.body.description;
+
+  if (!userDescription || userDescription.trim() === "") {
+    return res.status(400).json({ error: "Description is required" });
+  }
+
+  try {
+    const cohereApiKey = "k0pWeEsBzU76FtEt7boaD6LBkChm3M7wz8pVuXSR"; // Replace with your actual Cohere API key
+
+    const response = await fetch("https://api.cohere.ai/v1/generate", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${cohereApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "command", // You can also try "command-nightly"
+        prompt: `Improve the following project description professionally and concisely:\n\n${userDescription}`,
+        max_tokens: 200,
+        temperature: 0.7,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.generations && data.generations.length > 0) {
+      const refined = data.generations[0].text.trim();
+      res.json({ refined });
+    } else {
+      return res.status(500).json({
+        error: "Unexpected response from Cohere",
+        response: data,
+      });
+    }
+  } catch (error) {
+    console.error("Cohere API error:", error.message);
+    res.status(500).json({ error: "Something went wrong with Cohere" });
+  }
+});
   app.post('/projectpg-homepg', async (req, res) => {
     console.log('Received body:', req.body); 
   
@@ -254,14 +294,25 @@ app.post('/personalpg-homepg', async (req, res) => {
    
   });
   
+  app.post('/google-login', async (req, res) => {
+    const { email, password } = req.body;
+    let user = await User.findOne({ email });
 
+    if (!user) {
+        user = await User.create({ email, password });
+    }
 
-  
+    return res.json({ success: true, user });
+});
+
+app.get("/", (req, res) => {
+  res.send("🚀 Backend server is live!");
+});
 
 // Define the port
 const PORT = 5000;
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server running on port ,${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

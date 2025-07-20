@@ -136,7 +136,7 @@ import { useLocation } from "react-router-dom";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-const Resume = ({ scrollToEducation },{scrolltoProject}) => {
+const Resume = () => {
   const location = useLocation();
   const data = location.state;
   console.log("Resume page data is ", data);
@@ -287,7 +287,7 @@ const Resume = ({ scrollToEducation },{scrolltoProject}) => {
           <hr className="mb-5" />
 
           {/* Projects */}
-          <div ref={ProjectRef}className="mb-5">
+          <div className="mb-5">
             <h3 className="text-lg font-semibold">Projects</h3>
             {data.user.project.map((project) => (
               <div className="mb-5" key={project.title}>
